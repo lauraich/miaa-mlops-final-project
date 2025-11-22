@@ -1,0 +1,70 @@
+name: CI/CD Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    # --------------------------
+    # 1. Login to Azure
+    # --------------------------
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # --------------------------
+    # 2. Build Docker image
+    # --------------------------
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/servicio-medico:latest .
+
+    # --------------------------
+    # 3. Login to Azure Container Registry
+    # --------------------------
+    - name: ACR Login
+      run: |
+        echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+          --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+    # --------------------------
+    # 4. Push image to ACR
+    # --------------------------
+    - name: Push image
+      run: |
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/servicio-medico:latest
+
+    # --------------------------
+    # 5. Upload artifacts to Azure Blob Storage
+    # --------------------------
+    - name: Install Azure Storage CLI
+      run: |
+        pip install azure-cli
+
+    - name: Upload file to Azure Storage
+      run: |
+        az storage blob upload \
+          --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+          --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
+          --container-name modelos-ml \
+          --file modelo.pkl \
+          --name modelo.pkl \
+          --overwrite true
+
+    # --------------------------
+    # 6. (Opcional) Deploy to Azure Web App / Container App
+    # --------------------------
+    # - name: Deploy to Azure Web App
+    #   uses: azure/webapps-deploy@v3
+    #   with:
+    #     app-name: "mia-webapp"
+    #     images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/servicio-medico:latest

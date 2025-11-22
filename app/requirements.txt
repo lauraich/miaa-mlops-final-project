@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+boto3
+onnxruntime
+numpy
+pydantic
+pytest
+requests
+azure-storage-blob
