@@ -1,15 +1,18 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import os
-
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from contextlib import asynccontextmanager
 from model_utils import ModelManager
+import uvicorn
+import cv2
+import numpy as np
+import os
+from dotenv import load_dotenv
 
-app = FastAPI()
+load_dotenv()
 
 ENV = os.getenv("ENVIRONMENT", "dev")
 AZ_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")          # ej: models
-MODEL_BLOB = os.getenv("AZURE_MODEL_BLOB")                # ej: model/my_model.onnx
+AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")
+MODEL_BLOB = os.getenv("AZURE_MODEL_BLOB")
 LOG_BLOB = "predicciones_dev.txt" if ENV == "dev" else "predicciones_prod.txt"
 STORAGE_ACCOUNT = "miaamlopsresources"
 
@@ -21,18 +24,51 @@ model_manager = ModelManager(
     conn_string=AZ_CONN_STR,
 )
 
-class InputPayload(BaseModel):
-    inputs: list
+# Modificamos el pre-procesamiento para aceptar bytes directos
+def preprocess_image_bytes(img_bytes: bytes):
+    # Decodificar array de bytes directamente a imagen OpenCV
+    nparr = np.frombuffer(img_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    if img is None:
+        raise ValueError("No se pudo decodificar la imagen. Asegúrate de enviar un formato válido (jpg, png).")
 
-@app.on_event("startup")
-def startup_event():
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (300, 300))
+    
+    img = img.astype(np.uint8) # Aseguramos que sea uint8
+    img = np.expand_dims(img, axis=0) # (1, 300, 300, 3)
+    return img
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     model_manager.ensure_model()
+    print("Modelo cargado ✔️")
+    yield
+    print("Cerrando aplicación...")
+
+app = FastAPI(lifespan=lifespan)
+
 
 @app.post("/predict")
-def predict(payload: InputPayload):
+async def predict_endpoint(file: UploadFile = File(...)):
     try:
-        out = model_manager.predict(payload.inputs)
-        model_manager.log_prediction(out)
-        return {"prediction": out}
+        # Leer los bytes del archivo directamente
+        contents = await file.read()
+        
+        img_array = preprocess_image_bytes(contents)
+        print("Imagen preprocesada para predicción.")
+        
+        detections = model_manager.predict(img_array)
+        model_manager.log_prediction(detections)
+        
+        return {"filename": file.filename, "detections": detections}
+        
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
+        print(f"Error interno: {str(e)}") # Log en consola para debug
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

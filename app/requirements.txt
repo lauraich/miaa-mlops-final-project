@@ -7,3 +7,6 @@ pydantic
 pytest
 requests
 azure-storage-blob
+dotenv
+opencv-python
+python-multipart
