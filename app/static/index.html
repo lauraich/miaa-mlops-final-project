@@ -53,7 +53,7 @@
 
         <input type="file" id="fileInput" accept="image/*" />
         <br>
-        <button onclick="sendPrediction()">Enviar a /predict</button>
+        <button onclick="sendPrediction()">Identificar objetos</button>
 
 
         <div id="results">Aquí aparecerán los resultados...</div>
@@ -65,19 +65,16 @@
             const fileInput = document.getElementById("fileInput");
             const resultsDiv = document.getElementById("results");
 
-
             if (!fileInput.files.length) {
-                resultsDiv.innerHTML = "Por favor selecciona una imagen.";
+                resultsDiv.innerHTML = "Selecciona una imagen.";
                 return;
             }
 
-
+            const file = fileInput.files[0];
             const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
-
+            formData.append("file", file);
 
             resultsDiv.innerHTML = "Procesando...";
-
 
             try {
                 const response = await fetch("/predict", {
@@ -85,19 +82,24 @@
                     body: formData
                 });
 
-
                 if (!response.ok) {
                     resultsDiv.innerHTML = `Error del servidor: ${response.status}`;
                     return;
                 }
 
+                const blob = await response.blob();
 
-                const json = await response.json();
-                resultsDiv.innerHTML = `<pre>${JSON.stringify(json, null, 2)}</pre>`;
+                const imgURL = URL.createObjectURL(blob);
+
+                // Mostrar imagen en el frontend
+                resultsDiv.innerHTML = `<img src="${imgURL}" style="max-width:100%; border:2px solid #444; border-radius:8px;">`;
+
             } catch (err) {
                 resultsDiv.innerHTML = "Falló la conexión con el backend.";
+                console.error(err);
             }
         }
+
     </script>
 </body>
 

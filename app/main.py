@@ -65,14 +65,19 @@ async def predict_endpoint(file: UploadFile = File(...)):
     try:
         # Leer los bytes del archivo directamente
         contents = await file.read()
-        
+
         img_array = preprocess_image_bytes(contents)
         print("Imagen preprocesada para predicción.")
-        
         detections = model_manager.predict(img_array)
         model_manager.log_prediction(detections)
-        
-        return {"filename": file.filename, "detections": detections}
+
+        # Dibujar cajas sobre la imagen original
+        img_with_boxes = model_manager.draw_detections(contents, detections)
+
+        return HTMLResponse(
+            content=img_with_boxes,
+            media_type="image/jpeg"
+        )
         
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))

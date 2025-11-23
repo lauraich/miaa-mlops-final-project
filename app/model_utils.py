@@ -5,6 +5,7 @@ import numpy as np
 import onnxruntime as ort
 from datetime import datetime, timezone
 from azure.storage.blob import BlobServiceClient
+import cv2
 
 class ModelManager:
     def __init__(self, storage_account, container, model_blob, log_blob, conn_string, score_threshold=0.5):
@@ -134,3 +135,33 @@ class ModelManager:
 
         # Sobrescribir blob
         log_blob_client.upload_blob(updated, overwrite=True)
+
+
+    def draw_detections(self, original_img_bytes, detections):
+        # Leer bytes → imagen BGR
+        nparr = np.frombuffer(original_img_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        h, w = img.shape[:2]
+
+        for det in detections:
+            box = det["box"]
+            score = det["score"]
+
+            # Las coordenadas vienen normalizadas (0–1), convertirlas
+            top = int(box["top"] * h)
+            left = int(box["left"] * w)
+            bottom = int(box["bottom"] * h)
+            right = int(box["right"] * w)
+
+            # Dibujar rectángulo
+            cv2.rectangle(img, (left, top), (right, bottom), (0, 255, 0), 2)
+
+            # Etiqueta con el score
+            label = f"person: {score:.2f}"
+            cv2.putText(img, label, (left, top - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+        # Codificar imagen a JPEG para enviar en respuesta
+        _, jpeg = cv2.imencode(".jpg", img)
+        return jpeg.tobytes()
