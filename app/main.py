@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from model_utils import ModelManager
 import uvicorn
@@ -49,6 +51,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    index_path = "app/static/index.html"
+    if not os.path.exists(index_path):
+        return HTMLResponse("<h1>No se encontró index.html</h1>", status_code=404)
+    return FileResponse(index_path)
 
 @app.post("/predict")
 async def predict_endpoint(file: UploadFile = File(...)):
@@ -71,4 +81,4 @@ async def predict_endpoint(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)

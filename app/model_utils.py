@@ -1,4 +1,5 @@
 import os
+import tempfile
 import json
 import numpy as np
 import onnxruntime as ort
@@ -26,7 +27,10 @@ class ModelManager:
         self.container_client = self.blob_service.get_container_client(container)
 
         # Usar /tmp es más seguro en entornos cloud/containers
-        self.local_model_path = os.path.join("/tmp", os.path.basename(model_blob))
+        self.local_model_path = os.path.join(
+            tempfile.gettempdir(),
+            os.path.basename(model_blob)
+        )
         self.session = None
 
     # ------------------------------

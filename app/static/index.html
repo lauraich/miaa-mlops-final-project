@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detector ONNX</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f2f2f7;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #3c57cc;
+        }
+
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eef1ff;
+            border-radius: 8px;
+            min-height: 60px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Subir Imagen para Predicción</h2>
+
+
+        <input type="file" id="fileInput" accept="image/*" />
+        <br>
+        <button onclick="sendPrediction()">Enviar a /predict</button>
+
+
+        <div id="results">Aquí aparecerán los resultados...</div>
+    </div>
+
+
+    <script>
+        async function sendPrediction() {
+            const fileInput = document.getElementById("fileInput");
+            const resultsDiv = document.getElementById("results");
+
+
+            if (!fileInput.files.length) {
+                resultsDiv.innerHTML = "Por favor selecciona una imagen.";
+                return;
+            }
+
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+
+            resultsDiv.innerHTML = "Procesando...";
+
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+
+                if (!response.ok) {
+                    resultsDiv.innerHTML = `Error del servidor: ${response.status}`;
+                    return;
+                }
+
+
+                const json = await response.json();
+                resultsDiv.innerHTML = `<pre>${JSON.stringify(json, null, 2)}</pre>`;
+            } catch (err) {
+                resultsDiv.innerHTML = "Falló la conexión con el backend.";
+            }
+        }
+    </script>
+</body>
+
+</html>
