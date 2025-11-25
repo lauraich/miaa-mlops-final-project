@@ -27,7 +27,7 @@ jobs:
     # --------------------------
     - name: Build Docker image
       run: |
-        if [[ "${env.ENVIRONMENT}" == "dev" ]]; then
+        if [[ "${ENVIRONMENT}" == "dev" ]]; then
           echo "Build dev: ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}"
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}/object-identifier:latest .
         else
@@ -39,7 +39,7 @@ jobs:
     # --------------------------
     - name: ACR Login
       run: |
-        if [[ "${env.ENVIRONMENT}" == "dev" ]]; then
+        if [[ "${ENVIRONMENT}" == "dev" ]]; then
           echo ${{ secrets.REGISTRY_PASSWORD_DEV }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }} \
             --username ${{ secrets.REGISTRY_USERNAME_DEV }} --password-stdin
         else
@@ -52,7 +52,7 @@ jobs:
     # --------------------------
     - name: Push image
       run: |
-        if [[ "${env.ENVIRONMENT}" == "dev" ]]; then
+        if [[ "${ENVIRONMENT}" == "dev" ]]; then
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}/object-identifier:latest
         else
            docker push ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}/object-identifier:latest
