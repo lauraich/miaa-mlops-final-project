@@ -28,12 +28,17 @@ jobs:
     - name: Build Docker image
       run: |
         if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          echo "Build dev: ${{ secrets.REGISTRY_LOGIN_SERVER }}"
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest .
+          Tag = "${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
         else
-          echo "Build prod: ${{ secrets.REGISTRY_LOGIN_SERVER }}"
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest .
+          Tag = "${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
         fi
+
+        echo "Antes del docker: $Tag"
+        docker build -t $Tag .
+      
+      shell: bash
+      env:
+        REGISTRY_LOGIN_SERVER:${{secret.REGISTRY_LOGIN_SERVER}}
     # --------------------------
     # 3. Login to Azure Container Registry
     # --------------------------
