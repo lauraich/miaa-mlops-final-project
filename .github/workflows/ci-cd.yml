@@ -26,23 +26,41 @@ jobs:
     # --------------------------
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest .
-
+        if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}/object-identifier:latest .
+          ENVIRONMENT=dev
+        else
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}/object-identifier:latest .
+          ENVIRONMENT=prod
+        fi
     # --------------------------
     # 3. Login to Azure Container Registry
     # --------------------------
     - name: ACR Login
       run: |
-        echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-          --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+        if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+          echo ${{ secrets.REGISTRY_PASSWORD_DEV }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }} \
+            --username ${{ secrets.REGISTRY_USERNAME_DEV }} --password-stdin
+          ENVIRONMENT=dev
+        else
+          echo ${{ secrets.REGISTRY_PASSWORD_PROD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }} \
+            --username ${{ secrets.REGISTRY_USERNAME_PROD }} --password-stdin
+          ENVIRONMENT=prod
+        fi
 
     # --------------------------
     # 4. Push image to ACR
     # --------------------------
     - name: Push image
       run: |
-        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
-
+        if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}/object-identifier:latest
+            ENVIRONMENT=dev
+        else
+           docker push ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}/object-identifier:latest
+            ENVIRONMENT=prod
+        fi
+        
     # --------------------------
     # 5. Upload artifacts to Azure Blob Storage
     # --------------------------
