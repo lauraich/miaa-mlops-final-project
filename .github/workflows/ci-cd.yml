@@ -38,7 +38,8 @@ jobs:
       
       shell: bash
       env:
-        REGISTRY_LOGIN_SERVER: ${{secrets.REGISTRY_LOGIN_SERVER}}
+        ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+        REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
     # --------------------------
     # 3. Login to Azure Container Registry
     # --------------------------
