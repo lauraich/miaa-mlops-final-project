@@ -53,11 +53,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-#app.mount("/static", StaticFiles(directory="app/static"), name="static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
-    index_path = "app/static/index.html"
+    index_path = os.path.join(STATIC_DIR, "index.html")
     if not os.path.exists(index_path):
         return HTMLResponse("<h1>No se encontró index.html</h1>", status_code=404)
     return FileResponse(index_path)
