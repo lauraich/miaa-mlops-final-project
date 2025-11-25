@@ -10,3 +10,5 @@ azure-storage-blob
 dotenv
 opencv-python
 python-multipart
+httpx
+scikit-learn

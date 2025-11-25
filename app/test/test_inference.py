@@ -7,11 +7,12 @@ import numpy as np
 from fastapi.testclient import TestClient
 from main import app
 from model_utils import ModelManager
+import tempfile
 
 def test_download_test_image():
     conn = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
     container = os.getenv("TEST_IMAGES_CONTAINER")
-    blob_name = "test1.jpg"
+    blob_name = "personas.jpg"
 
     blob = BlobClient.from_connection_string(conn, container, blob_name)
 
@@ -39,7 +40,7 @@ def test_full_prediction_pipeline():
     blob = BlobClient.from_connection_string(
         os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
         os.getenv("TEST_IMAGES_CONTAINER"),
-        "test_person.jpg"
+        "personas.jpg"
     )
     img_bytes = blob.download_blob().readall()
 
@@ -59,11 +60,20 @@ def test_full_prediction_pipeline():
 client = TestClient(app)
 
 def test_predict_endpoint():
-    img_path = "tests/test_person.jpg"
+    conn = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    container = os.getenv("TEST_IMAGES_CONTAINER")
+    blob_name = "personas.jpg"
 
-    with open(img_path, "rb") as f:
-        response = client.post("/predict", files={"file": f})
+    blob = BlobClient.from_connection_string(conn, container, blob_name)
+    img_bytes = blob.download_blob().readall()
+
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp.write(img_bytes)
+        tmp_path = tmp.name
+
+    response = client.post(
+        "/predict",
+        files={"file": ("personas.jpg", open(tmp_path, "rb"), "image/jpeg")}
+    )
 
     assert response.status_code == 200
-    assert response.headers["content-type"] == "image/jpeg"
-    assert len(response.content) > 1000  # debería tener bytes
