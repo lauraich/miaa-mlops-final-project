@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from model_utils import ModelManager
 import uvicorn
@@ -12,13 +14,15 @@ load_dotenv()
 ENV = os.getenv("ENVIRONMENT", "dev")
 AZ_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")
+AZ_LOG_CONTAINER = os.getenv("AZURE_LOG_CONTAINER_NAME")
 MODEL_BLOB = os.getenv("AZURE_MODEL_BLOB")
-LOG_BLOB = "predicciones_dev.txt" if ENV == "dev" else "predicciones_prod.txt"
-STORAGE_ACCOUNT = "miaamlopsresources"
+LOG_BLOB = os.getenv("AZURE_LOG_BLOB_NAME")
+STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
 
 model_manager = ModelManager(
     storage_account=STORAGE_ACCOUNT,
     container=AZ_CONTAINER,
+    log_container=AZ_LOG_CONTAINER,
     model_blob=MODEL_BLOB,
     log_blob=LOG_BLOB,
     conn_string=AZ_CONN_STR,
@@ -49,20 +53,36 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if not os.path.exists(index_path):
+        return HTMLResponse("<h1>No se encontró index.html</h1>", status_code=404)
+    return FileResponse(index_path)
 
 @app.post("/predict")
 async def predict_endpoint(file: UploadFile = File(...)):
     try:
         # Leer los bytes del archivo directamente
         contents = await file.read()
-        
+
         img_array = preprocess_image_bytes(contents)
         print("Imagen preprocesada para predicción.")
-        
         detections = model_manager.predict(img_array)
         model_manager.log_prediction(detections)
-        
-        return {"filename": file.filename, "detections": detections}
+
+        # Dibujar cajas sobre la imagen original
+        img_with_boxes = model_manager.draw_detections(contents, detections)
+
+        return HTMLResponse(
+            content=img_with_boxes,
+            media_type="image/jpeg"
+        )
         
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
@@ -71,4 +91,4 @@ async def predict_endpoint(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
