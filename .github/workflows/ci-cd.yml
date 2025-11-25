@@ -28,13 +28,13 @@ jobs:
     - name: Build Docker image
       run: |
         if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          Tag = "${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
+          TAG="${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
         else
-          Tag = "${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
+          TAG="${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
         fi
 
-        echo "Antes del docker: $Tag"
-        docker build -t $Tag .
+        echo "Antes del docker: $TAG"
+        docker build -t $TAG .
       
       shell: bash
       env:
