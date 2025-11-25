@@ -28,11 +28,11 @@ jobs:
     - name: Build Docker image
       run: |
         if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          echo "Build dev: ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}"
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}/object-identifier:latest .
+          echo "Build dev: ${{ secrets.REGISTRY_LOGIN_SERVER }}"
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest .
         else
-          echo "Build prod: ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}"
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}/object-identifier:latest .
+          echo "Build prod: ${{ secrets.REGISTRY_LOGIN_SERVER }}"
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest .
         fi
     # --------------------------
     # 3. Login to Azure Container Registry
@@ -40,11 +40,11 @@ jobs:
     - name: ACR Login
       run: |
         if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          echo ${{ secrets.REGISTRY_PASSWORD_DEV }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }} \
-            --username ${{ secrets.REGISTRY_USERNAME_DEV }} --password-stdin
+          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+            --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
         else
-          echo ${{ secrets.REGISTRY_PASSWORD_PROD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }} \
-            --username ${{ secrets.REGISTRY_USERNAME_PROD }} --password-stdin
+          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+            --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
         fi
 
     # --------------------------
@@ -53,9 +53,9 @@ jobs:
     - name: Push image
       run: |
         if [[ "${ENVIRONMENT}" == "dev" ]]; then
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}/object-identifier:latest
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
         else
-           docker push ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}/object-identifier:latest
+           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
         fi
         
     # --------------------------
