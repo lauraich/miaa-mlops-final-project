@@ -14,6 +14,7 @@ load_dotenv()
 ENV = os.getenv("ENVIRONMENT", "dev")
 AZ_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")
+AZ_LOG_CONTAINER = os.getenv("AZURE_LOG_CONTAINER_NAME")
 MODEL_BLOB = os.getenv("AZURE_MODEL_BLOB")
 LOG_BLOB = "predicciones_dev.txt" if ENV == "dev" else "predicciones_prod.txt"
 STORAGE_ACCOUNT = "miaamlopsresources"
@@ -21,6 +22,7 @@ STORAGE_ACCOUNT = "miaamlopsresources"
 model_manager = ModelManager(
     storage_account=STORAGE_ACCOUNT,
     container=AZ_CONTAINER,
+    log_container=AZ_LOG_CONTAINER,
     model_blob=MODEL_BLOB,
     log_blob=LOG_BLOB,
     conn_string=AZ_CONN_STR,
@@ -51,7 +53,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+#app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():

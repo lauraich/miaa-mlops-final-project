@@ -11,7 +11,7 @@ from labels import COCO_LABELS
 
 
 class ModelManager:
-    def __init__(self, storage_account, container, model_blob, log_blob, conn_string, score_threshold=0.5):
+    def __init__(self, storage_account, container,log_container, model_blob, log_blob, conn_string, score_threshold=0.5):
         """
         storage_account: nombre de la cuenta de storage: ej. miaamlopsresources
         container: nombre del contenedor donde está el modelo y logs
@@ -22,6 +22,7 @@ class ModelManager:
         """
         self.storage_account = storage_account
         self.container = container
+        self.log_container = log_container
         self.model_blob = model_blob
         self.log_blob = log_blob
         self.conn_string = conn_string
@@ -29,6 +30,7 @@ class ModelManager:
 
         self.blob_service = BlobServiceClient.from_connection_string(conn_string)
         self.container_client = self.blob_service.get_container_client(container)
+        self.log_container_client = self.blob_service.get_container_client(log_container)
 
         # Usar /tmp es más seguro en entornos cloud/containers
         self.local_model_path = os.path.join(
@@ -119,7 +121,7 @@ class ModelManager:
     # Logging de predicciones
     # ------------------------------
     def log_prediction(self, prediction):
-        log_blob_client = self.container_client.get_blob_client(self.log_blob)
+        log_blob_client = self.log_container_client.get_blob_client(self.log_blob)
 
         # Intentar leer el archivo actual
         try:

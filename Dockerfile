@@ -1,5 +1,10 @@
 FROM python:3.11-slim
 
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY app/requirements.txt /app/
@@ -10,6 +15,5 @@ COPY app/ /app/
 EXPOSE 8080
 
 ENV ENVIRONMENT=dev
-# En producción/CI establecer MODEL_BUCKET, MODEL_KEY, AWS credentials como secrets/env
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8080"]
