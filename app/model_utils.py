@@ -7,6 +7,9 @@ from datetime import datetime, timezone
 from azure.storage.blob import BlobServiceClient
 import cv2
 
+from labels import COCO_LABELS
+
+
 class ModelManager:
     def __init__(self, storage_account, container, model_blob, log_blob, conn_string, score_threshold=0.5):
         """
@@ -156,11 +159,11 @@ class ModelManager:
 
             # Dibujar rectángulo
             cv2.rectangle(img, (left, top), (right, bottom), (0, 255, 0), 2)
-
             # Etiqueta con el score
-            label = f"person: {score:.2f}"
+            class_name = COCO_LABELS.get(det["class_index"], "Unknown")
+            label = f"{class_name}: {score:.2f}"
             cv2.putText(img, label, (left, top - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
 
         # Codificar imagen a JPEG para enviar en respuesta
         _, jpeg = cv2.imencode(".jpg", img)
