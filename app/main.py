@@ -16,8 +16,8 @@ AZ_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")
 AZ_LOG_CONTAINER = os.getenv("AZURE_LOG_CONTAINER_NAME")
 MODEL_BLOB = os.getenv("AZURE_MODEL_BLOB")
-LOG_BLOB = "predicciones_dev.txt" if ENV == "dev" else "predicciones_prod.txt"
-STORAGE_ACCOUNT = "miaamlopsresources"
+LOG_BLOB = os.getenv("AZURE_LOG_BLOB_NAME")
+STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
 
 model_manager = ModelManager(
     storage_account=STORAGE_ACCOUNT,
