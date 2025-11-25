@@ -27,10 +27,10 @@ jobs:
     - name: Build Docker image
       run: |
         if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
-          ENVIRONMENT="dev"
+          echo "Build dev: ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}"
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}/object-identifier:latest .
         else
-          ENVIRONMENT="prod"
+          echo "Build prod: ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}"
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}/object-identifier:latest .
         fi
     # --------------------------
