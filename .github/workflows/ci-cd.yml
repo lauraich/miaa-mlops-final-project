@@ -23,6 +23,14 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     # --------------------------
+    # Run stability tests
+    # --------------------------
+    - name: Run pytest
+      run: |
+        echo "🚀 Ejecutando pruenas de estabilidad …"
+        pytest -v app/test/test_metric_stability.py
+
+    # --------------------------
     # 2. Build Docker image
     # --------------------------
     - name: Build Docker image
