@@ -29,9 +29,11 @@ jobs:
       run: |
         if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
           ENVIRONMENT="dev"
+          echo "AZURE_REGISTRY_LOGIN_SERVER dev -> ${AZURE_REGISTRY_LOGIN_SERVER}"
           TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-dev:latest"
         else
           ENVIRONMENT="prod"
+          echo "AZURE_REGISTRY_LOGIN_SERVER prod -> ${AZURE_REGISTRY_LOGIN_SERVER}"
           TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-prod:latest"
         fi
 
