@@ -3,9 +3,9 @@ name: CI/CD Azure
 on:
   push:
     branches:
-      - main
-env:
-  ENVIRONMENT: ${{ github.ref == 'refs/heads/prod' && 'prod' || 'dev' }}
+      - dev
+      - prod
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -27,19 +27,21 @@ jobs:
     # --------------------------
     - name: Build Docker image
       run: |
-        if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          TAG="${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
+        if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
+          ENVIRONMENT="dev"
+          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-dev:latest"
         else
-          TAG="${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
+          ENVIRONMENT="prod"
+          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-prod:latest"
         fi
 
-        echo "Antes del docker: $TAG"
+        echo "Building image with tag: $TAG"
         docker build -t $TAG .
       
       shell: bash
       env:
-        ENVIRONMENT: ${{ vars.ENVIRONMENT }}
         REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+    
     # --------------------------
     # 3. Login to Azure Container Registry
     # --------------------------
