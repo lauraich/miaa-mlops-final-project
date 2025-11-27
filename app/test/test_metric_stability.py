@@ -57,8 +57,6 @@ y_test = [
     }
 ]
 
-print("Detections:", detections)
-print("Y Test:", y_test)
 
 def test_model_loads():
     assert model is not None
@@ -94,6 +92,8 @@ def test_score_not_significantly_lower():
 
 
 def test_model_drift_limited():
+    print("Detections:", detections)
+    print("Y Test:", y_test)
     historical_score = 0.85
     current_score = np.mean([d["score"] for d in detections])
     print(f"current_score: {current_score}, historical_score: {historical_score}")
