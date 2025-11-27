@@ -29,7 +29,7 @@ jobs:
     # --------------------------
     - name: Run stability tests
       run: |
-        pytest test/test_predicciones.py -v --maxfail=1 --disable-warnings
+        pytest app/test/test_metric_stability.py.py -v --maxfail=1 --disable-warnings
 
     # --------------------------
     # 2. Build Docker image
