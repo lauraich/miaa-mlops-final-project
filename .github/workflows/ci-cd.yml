@@ -23,7 +23,7 @@ jobs:
     # --------------------------
     # Run connection tests
     # --------------------------
-    - name: Run stability tests
+    - name: Run connection tests
       run: |
         if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
           ENVIRONMENT="dev"
