@@ -10,17 +10,13 @@ import numpy as np
 load_dotenv()
 
 ENV = os.getenv("ENVIRONMENT", "dev")
-AZ_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")
-MODEL_BLOB = os.getenv("AZURE_MODEL_BLOB")
-LOG_BLOB = "predicciones_dev.txt" if ENV == "dev" else "predicciones_prod.txt"
-STORAGE_ACCOUNT = "miaamlopsresources"
 
 model = ModelManager(
-    storage_account="miaamlopsresources",
+    storage_account=os.getenv("AZURE_STORAGE_ACCOUNT_NAME"),
     container=os.getenv("AZURE_CONTAINER_NAME"),
+    log_container=os.getenv("AZURE_LOG_CONTAINER_NAME"),
     model_blob=os.getenv("AZURE_MODEL_BLOB"),
-    log_blob="test_predictions.txt",
+    log_blob=os.getenv("AZURE_LOG_BLOB_NAME"),
     conn_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 )
 
@@ -37,6 +33,7 @@ img_bytes = blob.download_blob().readall()
 # Preprocesar como en tu API
 nparr = np.frombuffer(img_bytes, np.uint8)
 img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 img = cv2.resize(img, (300, 300))
 img = img.astype(np.uint8)
 img = np.expand_dims(img, axis=0)
@@ -44,24 +41,28 @@ img = np.expand_dims(img, axis=0)
 detections = model.predict(img)
 y_test = [
     {
-        'box': {'top': 0.284269779920578, 'left': 0.6359336972236633, 'bottom': 0.9263092279434204, 'right': 0.8839356303215027}, 
-        'class_index': 1, 
-        'score': 0.8715940713882446
+        'box': {'top': 0.25217026472091675, 'left': 0.6292311549186707, 'bottom': 0.9504855275154114, 'right': 0.8849648833274841}, 
+        'class_index': 1, 'score': 0.9500906467437744
     }, 
     {
-        'box': {'top': 0.1876823455095291, 'left': 0.08408525586128235, 'bottom': 0.642768144607544, 'right': 0.2473745048046112}, 
-        'class_index': 1, 
-        'score': 0.8348629474639893
-    }
+        'box': {'top': 0.18705536425113678, 'left': 0.07316528260707855, 'bottom': 0.6384272575378418, 'right': 0.2533271312713623}, 
+        'class_index': 1, 'score': 0.9244495034217834}, 
+    {'box': {'top': 0.10694947838783264, 'left': 0.6104970574378967, 'bottom': 0.45581451058387756, 'right': 0.7187784314155579}, 'class_index': 1, 'score': 0.7527821063995361}, 
+    {'box': {'top': 0.13580632209777832, 'left': 0.37779128551483154, 'bottom': 0.5358016490936279, 'right': 0.5546568632125854}, 'class_index': 1, 'score': 0.6762491464614868}, 
+    {'box': {'top': 0.2216137945652008, 'left': 0.24844494462013245, 'bottom': 0.5840431451797485, 'right': 0.41958221793174744}, 'class_index': 1, 'score': 0.6539140939712524}, 
+    {'box': {'top': 0.22300595045089722, 'left': 0.7961546778678894, 'bottom': 0.8918973803520203, 'right': 0.9733880162239075}, 'class_index': 1, 'score': 0.6087241172790527}
 ]
 
-print("Detections:", detections)
 
 def test_model_loads():
     assert model is not None
 
 
 def test_detection_count_stability():
+    print(f"model : {model}\n")
+    print(f"Detections : {detections}\n")
+    print(f"Y Test : {y_test}\n")
+    
     assert len(detections) == len(y_test)
 
 def detection_accuracy(y_test, y_pred):
@@ -91,7 +92,7 @@ def test_score_not_significantly_lower():
 
 
 def test_model_drift_limited():
-    historical_score = 0.85
+    historical_score = 0.760
     current_score = np.mean([d["score"] for d in detections])
 
     assert abs(historical_score - current_score) <= 0.05

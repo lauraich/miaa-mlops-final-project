@@ -3,20 +3,49 @@ name: CI/CD Azure
 on:
   push:
     branches:
-      - main
-env:
-  ENVIRONMENT: ${{ github.ref == 'refs/heads/prod' && 'prod' || 'dev' }}
+      - dev
+      - prod
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'dev' && 'dev' || 'prod' }}
 
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
+    
+    - name: Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f app/requirements.txt ]; then pip install -r app/requirements.txt; fi
 
     # --------------------------
-    # 1. Login to Azure
+    # Run stability tests
     # --------------------------
+    - name: Run stability tests
+      run: |
+        if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
+          ENVIRONMENT="dev"
+          echo "ENVIRONMENT = $ENVIRONMENT"
+          echo "AZURE_CONTAINER_NAME dev -> ${AZURE_CONTAINER_NAME}"
+          echo "TEST_IMAGES_CONTAINER dev -> ${TEST_IMAGES_CONTAINER}"
+          echo "AZURE_LOG_CONTAINER_NAME dev -> ${AZURE_LOG_CONTAINER_NAME}"
+        else
+          ENVIRONMENT="prod"
+          echo "ENVIRONMENT = $ENVIRONMENT"
+          echo "AZURE_CONTAINER_NAME prod -> ${AZURE_CONTAINER_NAME}"
+          echo "TEST_IMAGES_CONTAINER prod -> ${TEST_IMAGES_CONTAINER}"
+        fi
+        pytest app/test/test_metric_stability.py -v -s --maxfail=1 --disable-warnings
+      env:
+        ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        AZURE_CONTAINER_NAME: ${{ secrets.AZURE_CONTAINER_NAME }}
+        TEST_IMAGES_CONTAINER: ${{ secrets.TEST_IMAGES_CONTAINER }}
+        AZURE_MODEL_BLOB: ${{ secrets.AZURE_MODEL_BLOB }}
+        AZURE_LOG_CONTAINER_NAME: ${{ secrets.AZURE_LOG_CONTAINER_NAME }}
+
     - name: Azure Login
       uses: azure/login@v2
       with:
@@ -27,19 +56,23 @@ jobs:
     # --------------------------
     - name: Build Docker image
       run: |
-        if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          TAG="${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
+        if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
+          ENVIRONMENT="dev"
+          echo "AZURE_REGISTRY_LOGIN_SERVER dev -> ${AZURE_REGISTRY_LOGIN_SERVER}"
+          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-dev:latest"
         else
-          TAG="${REGISTRY_LOGIN_SERVER}/object-identifier:latest"
+          ENVIRONMENT="prod"
+          echo "AZURE_REGISTRY_LOGIN_SERVER prod -> ${AZURE_REGISTRY_LOGIN_SERVER}"
+          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-prod:latest"
         fi
 
-        echo "Antes del docker: $TAG"
+        echo "Building image with tag: $TAG"
         docker build -t $TAG .
       
       shell: bash
       env:
-        ENVIRONMENT: ${{ vars.ENVIRONMENT }}
         REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+    
     # --------------------------
     # 3. Login to Azure Container Registry
     # --------------------------

@@ -26,10 +26,11 @@ def test_download_test_image():
 
 def test_full_prediction_pipeline():
     mgr = ModelManager(
-        storage_account="miaamlopsresources",
+        storage_account=os.getenv("AZURE_STORAGE_ACCOUNT_NAME"),
         container=os.getenv("AZURE_CONTAINER_NAME"),
+        log_container=os.getenv("AZURE_LOG_CONTAINER_NAME"),
         model_blob=os.getenv("AZURE_MODEL_BLOB"),
-        log_blob="test_predictions.txt",
+        log_blob=os.getenv("AZURE_LOG_BLOB_NAME"),
         conn_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING")
     )
 
@@ -47,6 +48,7 @@ def test_full_prediction_pipeline():
     # Preprocesar como en tu API
     nparr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (300, 300))
     img = img.astype(np.uint8)
     img = np.expand_dims(img, axis=0)
