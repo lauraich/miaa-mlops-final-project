@@ -9,6 +9,7 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'dev' && 'dev' || 'prod' }}
 
     steps:
     - name: Checkout repo
