@@ -38,10 +38,10 @@ jobs:
         pytest app/test/test_metric_stability.py -v --maxfail=1 --disable-warnings
       env:
         ENVIRONMENT: ${{ vars.ENVIRONMENT }}
-        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-        AZURE_CONTAINER_NAME: ${{ secrets.AZURE_CONTAINER_NAME }}
-        TEST_IMAGES_CONTAINER: ${{ secrets.TEST_IMAGES_CONTAINER }}
-        AZURE_MODEL_BLOB: ${{ secrets.AZURE_MODEL_BLOB }}
+        AZURE_STORAGE_CONNECTION_STRING: ${{ vars.AZURE_STORAGE_CONNECTION_STRING }}
+        AZURE_CONTAINER_NAME: ${{ vars.AZURE_CONTAINER_NAME }}
+        TEST_IMAGES_CONTAINER: ${{ vars.TEST_IMAGES_CONTAINER }}
+        AZURE_MODEL_BLOB: ${{ vars.AZURE_MODEL_BLOB }}
 
     - name: Azure Login
       uses: azure/login@v2
