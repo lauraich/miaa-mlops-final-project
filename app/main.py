@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ENV = os.getenv("ENVIRONMENT", "dev")
+ENV = os.getenv("ENVIRONMENT", "dev") 
 AZ_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")
 AZ_LOG_CONTAINER = os.getenv("AZURE_LOG_CONTAINER_NAME")
@@ -28,35 +28,37 @@ model_manager = ModelManager(
     conn_string=AZ_CONN_STR,
 )
 
-# Modificamos el pre-procesamiento para aceptar bytes directos
+
 def preprocess_image_bytes(img_bytes: bytes):
-    # Decodificar array de bytes directamente a imagen OpenCV
     nparr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
+
     if img is None:
-        raise ValueError("No se pudo decodificar la imagen. Asegúrate de enviar un formato válido (jpg, png).")
+        raise ValueError("No se pudo decodificar la imagen.")
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (300, 300))
-    
-    img = img.astype(np.uint8) # Aseguramos que sea uint8
-    img = np.expand_dims(img, axis=0) # (1, 300, 300, 3)
+    img = img.astype(np.uint8)
+    img = np.expand_dims(img, axis=0)
     return img
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     model_manager.ensure_model()
-    print("Modelo cargado ✔️")
+    print(f"Modelo cargado para entorno: {ENV} ✔️")
     yield
     print("Cerrando aplicación...")
 
+
 app = FastAPI(lifespan=lifespan)
 
+
+# Static
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
@@ -65,30 +67,40 @@ async def serve_frontend():
         return HTMLResponse("<h1>No se encontró index.html</h1>", status_code=404)
     return FileResponse(index_path)
 
-@app.post("/predict")
+
+# Cambia el endpoint según la rama
+ENDPOINT_PREFIX = "/predict" if ENV == "dev" else f"/predict-{ENV}"
+print(f"Usando endpoint: {ENDPOINT_PREFIX} for entorno: {ENV}")
+
+@app.post(ENDPOINT_PREFIX)
 async def predict_endpoint(file: UploadFile = File(...)):
     try:
-        # Leer los bytes del archivo directamente
         contents = await file.read()
+        #print("Bytes recibidos:", len(contents))
 
         img_array = preprocess_image_bytes(contents)
-        print("Imagen preprocesada para predicción.")
-        detections = model_manager.predict(img_array)
-        model_manager.log_prediction(detections)
+        #print("Imagen preprocesada correctamente:", img_array.shape)
 
-        # Dibujar cajas sobre la imagen original
+        detections = model_manager.predict(img_array)
+        #print("Predicción generada:", detections)
+
+        model_manager.log_prediction(detections)
+        #print("Predicción registrada.")
+
         img_with_boxes = model_manager.draw_detections(contents, detections)
+        #print("Imagen con cajas generada.")
 
         return HTMLResponse(
             content=img_with_boxes,
             media_type="image/jpeg"
         )
-        
+
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        print(f"Error interno: {str(e)}") # Log en consola para debug
+        print(f"Error interno: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

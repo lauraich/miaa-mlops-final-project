@@ -39,11 +39,6 @@ jobs:
         AZURE_MODEL_BLOB: ${{ secrets.AZURE_MODEL_BLOB }}
         AZURE_LOG_CONTAINER_NAME: ${{ secrets.AZURE_LOG_CONTAINER_NAME }}
 
-    - name: Azure Login
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
     # --------------------------
     # Run stability tests
     # --------------------------
@@ -121,22 +116,6 @@ jobs:
            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
         fi
         
-    # --------------------------
-    # 5. Upload artifacts to Azure Blob Storage
-    # --------------------------
-    - name: Install Azure Storage CLI
-      run: |
-        pip install azure-cli
-
-    - name: Upload file to Azure Storage
-      run: |
-        az storage blob upload \
-          --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-          --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
-          --container-name modelos-ml \
-          --file modelo.pkl \
-          --name modelo.pkl \
-          --overwrite true
 
     # --------------------------
     # 6. (Opcional) Deploy to Azure Web App / Container App
