@@ -65,6 +65,8 @@ def test_model_loads():
 
 
 def test_detection_count_stability():
+    print("Detections:", detections)
+    print("Y Test:", y_test)
     assert len(detections) == len(y_test)
 
 def detection_accuracy(y_test, y_pred):
@@ -79,7 +81,6 @@ def test_min_accuracy():
     assert acc >= 0.80
 
 def test_class_stability():
-    print("img bytes :", img)
     pred_classes = [d["class_index"] for d in detections]
     true_classes = [d["class_index"] for d in y_test]
 
