@@ -46,15 +46,8 @@ jobs:
       run: |
         if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
           ENVIRONMENT="dev"
-          echo "ENVIRONMENT = $ENVIRONMENT"
-          echo "AZURE_CONTAINER_NAME dev -> ${AZURE_CONTAINER_NAME}"
-          echo "TEST_IMAGES_CONTAINER dev -> ${TEST_IMAGES_CONTAINER}"
-          echo "AZURE_LOG_CONTAINER_NAME dev -> ${AZURE_LOG_CONTAINER_NAME}"
         else
           ENVIRONMENT="prod"
-          echo "ENVIRONMENT = $ENVIRONMENT"
-          echo "AZURE_CONTAINER_NAME prod -> ${AZURE_CONTAINER_NAME}"
-          echo "TEST_IMAGES_CONTAINER prod -> ${TEST_IMAGES_CONTAINER}"
         fi
         pytest app/test/test_metric_stability.py -v -s --maxfail=1 --disable-warnings
       env:
@@ -75,18 +68,17 @@ jobs:
     # --------------------------
     - name: Build Docker image
       run: |
-        if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
+        if [[ "${{ github.ref_name }}" == "dev" ]]; then
           ENVIRONMENT="dev"
-          echo "AZURE_REGISTRY_LOGIN_SERVER dev -> ${AZURE_REGISTRY_LOGIN_SERVER}"
-          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-dev:latest"
         else
           ENVIRONMENT="prod"
-          echo "AZURE_REGISTRY_LOGIN_SERVER prod -> ${AZURE_REGISTRY_LOGIN_SERVER}"
-          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-prod:latest"
         fi
-
-        echo "Building image with tag: $TAG"
-        docker build -t $TAG .
+        echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+        
+        IMAGE_NAME="${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${ENVIRONMENT}"
+        
+        # Build with SHA tags
+        docker build -t $IMAGE_NAME:${{ github.sha }} .
       
       shell: bash
       env:
@@ -97,24 +89,16 @@ jobs:
     # --------------------------
     - name: ACR Login
       run: |
-        if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+        echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
             --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
-        else
-          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-            --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
-        fi
 
     # --------------------------
     # 4. Push image to ACR
     # --------------------------
     - name: Push image
       run: |
-        if [[ "${ENVIRONMENT}" == "dev" ]]; then
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
-        else
-           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
-        fi
+        # Push both tags
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:${{ github.sha }}
         
 
     # --------------------------

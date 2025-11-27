@@ -37,7 +37,8 @@ def preprocess_image_bytes(img_bytes: bytes):
         raise ValueError("No se pudo decodificar la imagen.")
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (300, 300))
+    input_h, input_w = 300, 300
+    img = cv2.resize(img, (input_w, input_h), interpolation=cv2.INTER_LINEAR)
     img = img.astype(np.uint8)
     img = np.expand_dims(img, axis=0)
     return img
