@@ -63,10 +63,10 @@ jobs:
         fi
         echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
         
-        IMAGE_NAME="${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier"
+        IMAGE_NAME="${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${ENVIRONMENT}"
         
         # Build with both latest and SHA tags
-        docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:${{ github.sha }} .
+        docker build -t $IMAGE_NAME:latest .
       
       shell: bash
       env:
@@ -86,8 +86,7 @@ jobs:
     - name: Push image
       run: |
         # Push both tags
-        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
-        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:${{ github.sha }}
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:latest
         
     # --------------------------
     # 5. Upload artifacts to Azure Blob Storage
@@ -107,10 +106,10 @@ jobs:
     #       --overwrite true
 
     # --------------------------
-    # 6. (Opcional) Deploy to Azure Web App / Container App
+    # 6. Deploy to Azure Web App / Container App
     # --------------------------
-    # - name: Deploy to Azure Web App
-    #   uses: azure/webapps-deploy@v3
-    #   with:
-    #     app-name: "mia-webapp"
-    #     images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
+        images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:latest
