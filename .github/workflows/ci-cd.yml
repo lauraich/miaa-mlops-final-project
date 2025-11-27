@@ -37,7 +37,7 @@ jobs:
           echo "AZURE_CONTAINER_NAME prod -> ${AZURE_CONTAINER_NAME}"
           echo "TEST_IMAGES_CONTAINER prod -> ${TEST_IMAGES_CONTAINER}"
         fi
-        pytest app/test/test_metric_stability.py -v --maxfail=1 --disable-warnings
+        pytest app/test/test_metric_stability.py -v -s --maxfail=1 --disable-warnings
       env:
         ENVIRONMENT: ${{ vars.ENVIRONMENT }}
         AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
