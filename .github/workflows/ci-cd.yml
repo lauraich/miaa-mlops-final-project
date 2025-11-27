@@ -27,9 +27,13 @@ jobs:
         if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
           ENVIRONMENT="dev"
           echo "ENVIRONMENT = $ENVIRONMENT"
+          echo "AZURE_CONTAINER_NAME dev -> ${AZURE_CONTAINER_NAME}"
+          echo "TEST_IMAGES_CONTAINER dev -> ${TEST_IMAGES_CONTAINER}"
         else
           ENVIRONMENT="prod"
           echo "ENVIRONMENT = $ENVIRONMENT"
+          echo "AZURE_CONTAINER_NAME prod -> ${AZURE_CONTAINER_NAME}"
+          echo "TEST_IMAGES_CONTAINER prod -> ${TEST_IMAGES_CONTAINER}"
         fi
         pytest app/test/test_metric_stability.py -v --maxfail=1 --disable-warnings
       env:
