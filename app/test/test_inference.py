@@ -29,6 +29,7 @@ def test_full_prediction_pipeline():
         storage_account="miaamlopsresources",
         container=os.getenv("AZURE_CONTAINER_NAME"),
         model_blob=os.getenv("AZURE_MODEL_BLOB"),
+        log_container=os.getenv("AZURE_LOG_CONTAINER_NAME"),
         log_blob="test_predictions.txt",
         conn_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING")
     )

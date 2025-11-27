@@ -30,6 +30,7 @@ jobs:
           echo "ENVIRONMENT = $ENVIRONMENT"
           echo "AZURE_CONTAINER_NAME dev -> ${AZURE_CONTAINER_NAME}"
           echo "TEST_IMAGES_CONTAINER dev -> ${TEST_IMAGES_CONTAINER}"
+          echo "AZURE_LOG_CONTAINER_NAME dev -> ${AZURE_LOG_CONTAINER_NAME}"
         else
           ENVIRONMENT="prod"
           echo "ENVIRONMENT = $ENVIRONMENT"
@@ -43,6 +44,7 @@ jobs:
         AZURE_CONTAINER_NAME: ${{ secrets.AZURE_CONTAINER_NAME }}
         TEST_IMAGES_CONTAINER: ${{ secrets.TEST_IMAGES_CONTAINER }}
         AZURE_MODEL_BLOB: ${{ secrets.AZURE_MODEL_BLOB }}
+        AZURE_LOG_CONTAINER_NAME: ${{ secrets.AZURE_LOG_CONTAINER_NAME }}
 
     - name: Azure Login
       uses: azure/login@v2
