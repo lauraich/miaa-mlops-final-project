@@ -10,21 +10,15 @@ import numpy as np
 load_dotenv()
 
 ENV = os.getenv("ENVIRONMENT", "dev")
-AZ_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-AZ_CONTAINER = os.getenv("AZURE_CONTAINER_NAME")
-MODEL_BLOB = os.getenv("AZURE_MODEL_BLOB")
-LOG_BLOB = "predicciones_dev.txt" if ENV == "dev" else "predicciones_prod.txt"
-STORAGE_ACCOUNT = "miaamlopsresources"
 
 model = ModelManager(
-    storage_account="miaamlopsresources",
+    storage_account=os.getenv("AZURE_STORAGE_ACCOUNT_NAME"),
     container=os.getenv("AZURE_CONTAINER_NAME"),
-    model_blob=os.getenv("AZURE_MODEL_BLOB"),
     log_container=os.getenv("AZURE_LOG_CONTAINER_NAME"),
-    log_blob="test_predictions.txt",
+    model_blob=os.getenv("AZURE_MODEL_BLOB"),
+    log_blob=os.getenv("AZURE_LOG_BLOB_NAME"),
     conn_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 )
-
 
 model.ensure_model()
 
@@ -65,8 +59,10 @@ def test_model_loads():
 
 
 def test_detection_count_stability():
-    print("Detections:", detections)
-    print("Y Test:", y_test)
+    print(f"model : {model}\n")
+    print(f"Detections : {detections}\n")
+    print(f"Y Test : {y_test}\n")
+    
     assert len(detections) == len(y_test)
 
 def detection_accuracy(y_test, y_pred):
