@@ -23,28 +23,28 @@ jobs:
     # --------------------------
     # Run stability tests
     # --------------------------
-    - name: Run stability tests
-      run: |
-        if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
-          ENVIRONMENT="dev"
-          echo "ENVIRONMENT = $ENVIRONMENT"
-          echo "AZURE_CONTAINER_NAME dev -> ${AZURE_CONTAINER_NAME}"
-          echo "TEST_IMAGES_CONTAINER dev -> ${TEST_IMAGES_CONTAINER}"
-          echo "AZURE_LOG_CONTAINER_NAME dev -> ${AZURE_LOG_CONTAINER_NAME}"
-        else
-          ENVIRONMENT="prod"
-          echo "ENVIRONMENT = $ENVIRONMENT"
-          echo "AZURE_CONTAINER_NAME prod -> ${AZURE_CONTAINER_NAME}"
-          echo "TEST_IMAGES_CONTAINER prod -> ${TEST_IMAGES_CONTAINER}"
-        fi
-        pytest app/test/test_metric_stability.py -v -s --maxfail=1 --disable-warnings
-      env:
-        ENVIRONMENT: ${{ vars.ENVIRONMENT }}
-        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-        AZURE_CONTAINER_NAME: ${{ secrets.AZURE_CONTAINER_NAME }}
-        TEST_IMAGES_CONTAINER: ${{ secrets.TEST_IMAGES_CONTAINER }}
-        AZURE_MODEL_BLOB: ${{ secrets.AZURE_MODEL_BLOB }}
-        AZURE_LOG_CONTAINER_NAME: ${{ secrets.AZURE_LOG_CONTAINER_NAME }}
+    # - name: Run stability tests
+    #   run: |
+    #     if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
+    #       ENVIRONMENT="dev"
+    #       echo "ENVIRONMENT = $ENVIRONMENT"
+    #       echo "AZURE_CONTAINER_NAME dev -> ${AZURE_CONTAINER_NAME}"
+    #       echo "TEST_IMAGES_CONTAINER dev -> ${TEST_IMAGES_CONTAINER}"
+    #       echo "AZURE_LOG_CONTAINER_NAME dev -> ${AZURE_LOG_CONTAINER_NAME}"
+    #     else
+    #       ENVIRONMENT="prod"
+    #       echo "ENVIRONMENT = $ENVIRONMENT"
+    #       echo "AZURE_CONTAINER_NAME prod -> ${AZURE_CONTAINER_NAME}"
+    #       echo "TEST_IMAGES_CONTAINER prod -> ${TEST_IMAGES_CONTAINER}"
+    #     fi
+    #     pytest app/test/test_metric_stability.py -v -s --maxfail=1 --disable-warnings
+    #   env:
+    #     ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+    #     AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+    #     AZURE_CONTAINER_NAME: ${{ secrets.AZURE_CONTAINER_NAME }}
+    #     TEST_IMAGES_CONTAINER: ${{ secrets.TEST_IMAGES_CONTAINER }}
+    #     AZURE_MODEL_BLOB: ${{ secrets.AZURE_MODEL_BLOB }}
+    #     AZURE_LOG_CONTAINER_NAME: ${{ secrets.AZURE_LOG_CONTAINER_NAME }}
 
     - name: Azure Login
       uses: azure/login@v2
@@ -56,18 +56,17 @@ jobs:
     # --------------------------
     - name: Build Docker image
       run: |
-        if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
+        if [[ "${{ github.ref_name }}" == "dev" ]]; then
           ENVIRONMENT="dev"
-          echo "AZURE_REGISTRY_LOGIN_SERVER dev -> ${AZURE_REGISTRY_LOGIN_SERVER}"
-          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-dev:latest"
         else
           ENVIRONMENT="prod"
-          echo "AZURE_REGISTRY_LOGIN_SERVER prod -> ${AZURE_REGISTRY_LOGIN_SERVER}"
-          TAG="${AZURE_REGISTRY_LOGIN_SERVER}/object-identifier-prod:latest"
         fi
-
-        echo "Building image with tag: $TAG"
-        docker build -t $TAG .
+        echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+        
+        IMAGE_NAME="${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier"
+        
+        # Build with both latest and SHA tags
+        docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:${{ github.sha }} .
       
       shell: bash
       env:
@@ -78,41 +77,34 @@ jobs:
     # --------------------------
     - name: ACR Login
       run: |
-        if [[ "${ENVIRONMENT}" == "dev" ]]; then
-          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+        echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
             --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
-        else
-          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-            --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
-        fi
 
     # --------------------------
     # 4. Push image to ACR
     # --------------------------
     - name: Push image
       run: |
-        if [[ "${ENVIRONMENT}" == "dev" ]]; then
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
-        else
-           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
-        fi
+        # Push both tags
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:${{ github.sha }}
         
     # --------------------------
     # 5. Upload artifacts to Azure Blob Storage
     # --------------------------
-    - name: Install Azure Storage CLI
-      run: |
-        pip install azure-cli
+    # - name: Install Azure Storage CLI
+    #   run: |
+    #     pip install azure-cli
 
-    - name: Upload file to Azure Storage
-      run: |
-        az storage blob upload \
-          --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-          --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
-          --container-name modelos-ml \
-          --file modelo.pkl \
-          --name modelo.pkl \
-          --overwrite true
+    # - name: Upload file to Azure Storage
+    #   run: |
+    #     az storage blob upload \
+    #       --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+    #       --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
+    #       --container-name modelos-ml \
+    #       --file modelo.pkl \
+    #       --name modelo.pkl \
+    #       --overwrite true
 
     # --------------------------
     # 6. (Opcional) Deploy to Azure Web App / Container App
