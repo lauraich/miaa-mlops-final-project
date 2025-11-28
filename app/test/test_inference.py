@@ -37,10 +37,8 @@ def test_full_prediction_pipeline():
         conn_string=AZURE_STORAGE_CONNECTION_STRING
     )
 
-    # Ensure the model exists
     mgr.ensure_model()
 
-    # Download test image
     blob = BlobClient.from_connection_string(
         AZURE_STORAGE_CONNECTION_STRING,
         TEST_IMAGES_CONTAINER,
@@ -48,7 +46,7 @@ def test_full_prediction_pipeline():
     )
     img_bytes = blob.download_blob().readall()
 
-    # Preprocesar como en tu API
+    # Preprocesar como en el API
     nparr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
