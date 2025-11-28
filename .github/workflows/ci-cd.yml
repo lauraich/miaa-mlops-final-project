@@ -10,7 +10,6 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'dev' && 'dev' || 'prod' }}
-    environment: ${{ github.ref_name == 'dev' && 'dev' || 'prod' }}
 
     steps:
     - name: 🏗️ Checkout repo
@@ -88,14 +87,11 @@ jobs:
     - name: 🔒 ACR Login
       run: |
         echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-        echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
             --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
 
     # --------------------------
     - name: ⏳ Push image to ACR
       run: |
-        # Push both tags
-        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:${{ github.sha }}
         # Push both tags
         docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:${{ github.sha }}
         
