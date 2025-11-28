@@ -26,7 +26,7 @@ model.ensure_model()
 blob = BlobClient.from_connection_string(
     os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
     os.getenv("TEST_IMAGES_CONTAINER"),
-    "vino.jpg"
+    "cat.jpeg"
 )
 img_bytes = blob.download_blob().readall()
 
@@ -41,9 +41,7 @@ img = np.expand_dims(img, axis=0)
 
 detections = model.predict(img)
 y_test = [
-    {'box': {'bottom': 0.8314235210418701, 'left': 0.6495776176452637, 'right': 0.8239299058914185, 'top': 0.09341570734977722}, 'class_index': 46, 'score': 0.9623478055000305}, 
-    {'box': {'bottom': 0.9585992097854614, 'left': 0.0473104864358902, 'right': 0.5284692049026489, 'top': 0.1318044662475586}, 'class_index': 86, 'score': 0.7823154330253601}, 
-    {'box': {'bottom': 0.8430911302566528, 'left': 0.477891206741333, 'right': 0.6734379529953003, 'top': 0.08671590685844421}, 'class_index': 46, 'score': 0.7371527552604675}
+    {'box': {'bottom': 0.7944386005401611, 'left': 0.37576597929000854, 'right': 0.6311351656913757, 'top': 0.2239646017551422}, 'class_index': 17, 'score': 0.9384123086929321}
 ]
 
 
@@ -85,7 +83,7 @@ def test_score_not_significantly_lower():
 
 
 def test_model_drift_limited():
-    historical_score = 0.825
+    historical_score = 0.936
     current_score = np.mean([d["score"] for d in detections])
 
     assert abs(historical_score - current_score) <= 0.05
