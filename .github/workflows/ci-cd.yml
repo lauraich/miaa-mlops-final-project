@@ -63,7 +63,7 @@ jobs:
 
     # --------------------------
     - name: 📦 Build Docker image
-       run: |
+      run: |
         if [[ "${{ github.ref_name }}" == "dev" ]]; then
           ENVIRONMENT="dev"
         else
