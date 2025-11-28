@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - dev
-      - prod
+      - main
 
 jobs:
   build_and_deploy:
@@ -93,24 +93,6 @@ jobs:
         # Push both tags
         docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:${{ github.sha }}
         
-    # 5. Upload artifacts to Azure Blob Storage
-    # --------------------------
-    # - name: Install Azure Storage CLI
-    #   run: |
-    #     pip install azure-cli
-
-    # - name: Upload file to Azure Storage
-    #   run: |
-    #     az storage blob upload \
-    #       --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-    #       --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
-    #       --container-name modelos-ml \
-    #       --file modelo.pkl \
-    #       --name modelo.pkl \
-    #       --overwrite true
-
-    # --------------------------
-    # 6. Deploy to Azure Web App / Container App
     # --------------------------
     - name: 🚀 Build and deploy Container App
       uses: azure/container-apps-deploy-action@v1
