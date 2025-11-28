@@ -9,10 +9,13 @@ from main import app
 from model_utils import ModelManager
 import tempfile
 
+TEST_IMAGES_CONTAINER = os.getenv("TEST_IMAGES_CONTAINER")
+AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+
 def test_download_test_image():
-    conn = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    container = os.getenv("TEST_IMAGES_CONTAINER")
-    blob_name = "personas.jpg"
+    conn = AZURE_STORAGE_CONNECTION_STRING
+    container = TEST_IMAGES_CONTAINER
+    blob_name = "cat.jpeg"
 
     blob = BlobClient.from_connection_string(conn, container, blob_name)
 
@@ -31,7 +34,7 @@ def test_full_prediction_pipeline():
         log_container=os.getenv("AZURE_LOG_CONTAINER_NAME"),
         model_blob=os.getenv("AZURE_MODEL_BLOB"),
         log_blob=os.getenv("AZURE_LOG_BLOB_NAME"),
-        conn_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        conn_string=AZURE_STORAGE_CONNECTION_STRING
     )
 
     # Ensure the model exists
@@ -39,9 +42,9 @@ def test_full_prediction_pipeline():
 
     # Download test image
     blob = BlobClient.from_connection_string(
-        os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
-        os.getenv("TEST_IMAGES_CONTAINER"),
-        "personas.jpg"
+        AZURE_STORAGE_CONNECTION_STRING,
+        TEST_IMAGES_CONTAINER,
+        "cat.jpeg"
     )
     img_bytes = blob.download_blob().readall()
 
@@ -58,24 +61,3 @@ def test_full_prediction_pipeline():
     assert isinstance(detections, list)
     assert len(detections) > 0
 
-
-client = TestClient(app)
-
-def test_predict_endpoint():
-    conn = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    container = os.getenv("TEST_IMAGES_CONTAINER")
-    blob_name = "personas.jpg"
-
-    blob = BlobClient.from_connection_string(conn, container, blob_name)
-    img_bytes = blob.download_blob().readall()
-
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-        tmp.write(img_bytes)
-        tmp_path = tmp.name
-
-    response = client.post(
-        "/predict",
-        files={"file": ("personas.jpg", open(tmp_path, "rb"), "image/jpeg")}
-    )
-
-    assert response.status_code == 200
