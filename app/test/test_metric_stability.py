@@ -13,12 +13,9 @@ ENV = os.getenv("ENVIRONMENT", "dev")
 
 model = ModelManager(
     storage_account=os.getenv("AZURE_STORAGE_ACCOUNT_NAME"),
-    storage_account=os.getenv("AZURE_STORAGE_ACCOUNT_NAME"),
     container=os.getenv("AZURE_CONTAINER_NAME"),
     log_container=os.getenv("AZURE_LOG_CONTAINER_NAME"),
-    log_container=os.getenv("AZURE_LOG_CONTAINER_NAME"),
     model_blob=os.getenv("AZURE_MODEL_BLOB"),
-    log_blob=os.getenv("AZURE_LOG_BLOB_NAME"),
     log_blob=os.getenv("AZURE_LOG_BLOB_NAME"),
     conn_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 )
@@ -64,15 +61,7 @@ def test_model_loads():
     assert model is not None
 
 
-def test_detection_count_stability():
-    print(f"model : {model}\n")
-    print(f"Detections : {detections}\n")
-    print(f"Y Test : {y_test}\n")
-    
-    print(f"model : {model}\n")
-    print(f"Detections : {detections}\n")
-    print(f"Y Test : {y_test}\n")
-    
+def test_detection_count_stability():    
     assert len(detections) == len(y_test)
 
 def detection_accuracy(y_test, y_pred):
@@ -102,7 +91,6 @@ def test_score_not_significantly_lower():
 
 
 def test_model_drift_limited():
-    historical_score = 0.760
     historical_score = 0.760
     current_score = np.mean([d["score"] for d in detections])
 
