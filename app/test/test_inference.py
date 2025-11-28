@@ -15,7 +15,7 @@ AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 def test_download_test_image():
     conn = AZURE_STORAGE_CONNECTION_STRING
     container = TEST_IMAGES_CONTAINER
-    blob_name = "personas.jpg"
+    blob_name = "vino.jpg"
 
     blob = BlobClient.from_connection_string(conn, container, blob_name)
 
@@ -44,7 +44,7 @@ def test_full_prediction_pipeline():
     blob = BlobClient.from_connection_string(
         AZURE_STORAGE_CONNECTION_STRING,
         TEST_IMAGES_CONTAINER,
-        "personas.jpg"
+        "vino.jpg"
     )
     img_bytes = blob.download_blob().readall()
 

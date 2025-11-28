@@ -26,7 +26,7 @@ model.ensure_model()
 blob = BlobClient.from_connection_string(
     os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
     os.getenv("TEST_IMAGES_CONTAINER"),
-    "personas.jpg"
+    "vino.jpg"
 )
 img_bytes = blob.download_blob().readall()
 
@@ -41,20 +41,9 @@ img = np.expand_dims(img, axis=0)
 
 detections = model.predict(img)
 y_test = [
-    {
-        'box': {'top': 0.25217026472091675, 'left': 0.6292311549186707, 'bottom': 0.9504855275154114, 'right': 0.8849648833274841}, 
-        'class_index': 1, 
-        'score': 0.9500906467437744
-    }, 
-    {
-        'box': {'top': 0.18705536425113678, 'left': 0.07316528260707855, 'bottom': 0.6384272575378418, 'right': 0.2533271312713623}, 
-        'class_index': 1, 
-        'score': 0.9244495034217834
-    }, 
-    {'box': {'top': 0.10694947838783264, 'left': 0.6104970574378967, 'bottom': 0.45581451058387756, 'right': 0.7187784314155579}, 'class_index': 1, 'score': 0.7527821063995361}, 
-    {'box': {'top': 0.13580632209777832, 'left': 0.37779128551483154, 'bottom': 0.5358016490936279, 'right': 0.5546568632125854}, 'class_index': 1, 'score': 0.6762491464614868}, 
-    {'box': {'top': 0.2216137945652008, 'left': 0.24844494462013245, 'bottom': 0.5840431451797485, 'right': 0.41958221793174744}, 'class_index': 1, 'score': 0.6539140939712524}, 
-    {'box': {'top': 0.22300595045089722, 'left': 0.7961546778678894, 'bottom': 0.8918973803520203, 'right': 0.9733880162239075}, 'class_index': 1, 'score': 0.6087241172790527}
+    {'box': {'bottom': 0.8314235210418701, 'left': 0.6495776176452637, 'right': 0.8239299058914185, 'top': 0.09341570734977722}, 'class_index': 46, 'score': 0.9623478055000305}, 
+    {'box': {'bottom': 0.9585992097854614, 'left': 0.0473104864358902, 'right': 0.5284692049026489, 'top': 0.1318044662475586}, 'class_index': 86, 'score': 0.7823154330253601}, 
+    {'box': {'bottom': 0.8430911302566528, 'left': 0.477891206741333, 'right': 0.6734379529953003, 'top': 0.08671590685844421}, 'class_index': 46, 'score': 0.7371527552604675}
 ]
 
 
@@ -96,7 +85,7 @@ def test_score_not_significantly_lower():
 
 
 def test_model_drift_limited():
-    historical_score = 0.760
+    historical_score = 0.825
     current_score = np.mean([d["score"] for d in detections])
 
     assert abs(historical_score - current_score) <= 0.05
