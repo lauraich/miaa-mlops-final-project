@@ -34,7 +34,8 @@ img_bytes = blob.download_blob().readall()
 nparr = np.frombuffer(img_bytes, np.uint8)
 img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-img = cv2.resize(img, (300, 300))
+input_h, input_w = 300, 300
+img = cv2.resize(img, (input_w, input_h), interpolation=cv2.INTER_LINEAR)
 img = img.astype(np.uint8)
 img = np.expand_dims(img, axis=0)
 
