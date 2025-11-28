@@ -46,7 +46,7 @@ jobs:
         else
           ENVIRONMENT="prod"
         fi
-        pytest app/test/test_metric_stability.py -v --maxfail=1 --disable-warnings
+        pytest app/test/test_metric_stability.py -v -s --maxfail=1 --disable-warnings
       env:
         ENVIRONMENT: ${{ vars.ENVIRONMENT }}
         AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}

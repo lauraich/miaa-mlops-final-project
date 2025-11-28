@@ -27,7 +27,6 @@ blob = BlobClient.from_connection_string(
     os.getenv("TEST_IMAGES_CONTAINER"),
     "personas.jpg"
 )
-
 img_bytes = blob.download_blob().readall()
 
 # Preprocesar como en el API
@@ -62,7 +61,11 @@ def test_model_loads():
     assert model is not None
 
 
-def test_detection_count_stability():    
+def test_detection_count_stability():
+    print(f"model : {model}\n")
+    print(f"Detections : {detections}\n")
+    print(f"Y Test : {y_test}\n")
+    
     assert len(detections) == len(y_test)
 
 def detection_accuracy(y_test, y_pred):
