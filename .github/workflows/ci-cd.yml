@@ -4,11 +4,12 @@ on:
   push:
     branches:
       - dev
-      - prod
+      - main
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'dev' && 'dev' || 'prod' }}
     environment: ${{ github.ref_name == 'dev' && 'dev' || 'prod' }}
 
     steps:
@@ -66,6 +67,8 @@ jobs:
       run: |
         if [[ "${{ github.ref_name }}" == "dev" ]]; then
           ENVIRONMENT="dev"
+        if [[ "${{ github.ref_name }}" == "dev" ]]; then
+          ENVIRONMENT="dev"
         else
           ENVIRONMENT="prod"
         fi
@@ -80,15 +83,19 @@ jobs:
       env:
         REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
     
+    
     # --------------------------
     - name: 🔒 ACR Login
       run: |
+        echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
         echo ${{ secrets.REGISTRY_PASSWORD }} | docker login ${{ secrets.REGISTRY_LOGIN_SERVER }} \
             --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin
 
     # --------------------------
     - name: ⏳ Push image to ACR
       run: |
+        # Push both tags
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:${{ github.sha }}
         # Push both tags
         docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:${{ github.sha }}
         
@@ -98,3 +105,29 @@ jobs:
     #   with:
     #     app-name: "mia-webapp"
     #     images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier:latest
+    # 5. Upload artifacts to Azure Blob Storage
+    # --------------------------
+    # - name: Install Azure Storage CLI
+    #   run: |
+    #     pip install azure-cli
+
+    # - name: Upload file to Azure Storage
+    #   run: |
+    #     az storage blob upload \
+    #       --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+    #       --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
+    #       --container-name modelos-ml \
+    #       --file modelo.pkl \
+    #       --name modelo.pkl \
+    #       --overwrite true
+
+    # --------------------------
+    # 6. Deploy to Azure Web App / Container App
+    # --------------------------
+    - name: Build and deploy Container App
+      uses: azure/container-apps-deploy-action@v1
+      with:
+          acrName: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+          containerAppName: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
+          resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          imageToDeploy: ${{ secrets.REGISTRY_LOGIN_SERVER }}/object-identifier-${{ env.ENVIRONMENT }}:${{ github.sha }}
