@@ -22,7 +22,6 @@ model = ModelManager(
 
 model.ensure_model()
 
-# Download test image
 blob = BlobClient.from_connection_string(
     os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
     os.getenv("TEST_IMAGES_CONTAINER"),
@@ -30,11 +29,12 @@ blob = BlobClient.from_connection_string(
 )
 img_bytes = blob.download_blob().readall()
 
-# Preprocesar como en tu API
+# Preprocesar como en el API
 nparr = np.frombuffer(img_bytes, np.uint8)
 img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-img = cv2.resize(img, (300, 300))
+input_h, input_w = 300, 300
+img = cv2.resize(img, (input_w, input_h), interpolation=cv2.INTER_LINEAR)
 img = img.astype(np.uint8)
 img = np.expand_dims(img, axis=0)
 
@@ -42,11 +42,14 @@ detections = model.predict(img)
 y_test = [
     {
         'box': {'top': 0.25217026472091675, 'left': 0.6292311549186707, 'bottom': 0.9504855275154114, 'right': 0.8849648833274841}, 
-        'class_index': 1, 'score': 0.9500906467437744
+        'class_index': 1, 
+        'score': 0.9500906467437744
     }, 
     {
         'box': {'top': 0.18705536425113678, 'left': 0.07316528260707855, 'bottom': 0.6384272575378418, 'right': 0.2533271312713623}, 
-        'class_index': 1, 'score': 0.9244495034217834}, 
+        'class_index': 1, 
+        'score': 0.9244495034217834
+    }, 
     {'box': {'top': 0.10694947838783264, 'left': 0.6104970574378967, 'bottom': 0.45581451058387756, 'right': 0.7187784314155579}, 'class_index': 1, 'score': 0.7527821063995361}, 
     {'box': {'top': 0.13580632209777832, 'left': 0.37779128551483154, 'bottom': 0.5358016490936279, 'right': 0.5546568632125854}, 'class_index': 1, 'score': 0.6762491464614868}, 
     {'box': {'top': 0.2216137945652008, 'left': 0.24844494462013245, 'bottom': 0.5840431451797485, 'right': 0.41958221793174744}, 'class_index': 1, 'score': 0.6539140939712524}, 

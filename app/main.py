@@ -8,7 +8,6 @@ import cv2
 import numpy as np
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
 ENV = os.getenv("ENVIRONMENT", "dev") 
@@ -55,7 +54,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-# Static
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
