@@ -27,6 +27,7 @@ blob = BlobClient.from_connection_string(
     os.getenv("TEST_IMAGES_CONTAINER"),
     "personas.jpg"
 )
+
 img_bytes = blob.download_blob().readall()
 
 # Preprocesar como en el API
